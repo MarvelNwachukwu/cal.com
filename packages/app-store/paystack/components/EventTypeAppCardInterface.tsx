@@ -38,8 +38,9 @@ const EventTypeAppCard: EventTypeAppCardComponent = function EventTypeAppCard({
       switchChecked={requirePayment}
       switchOnClick={(enabled) => {
         setRequirePayment(enabled);
+        setAppData("enabled", enabled);
       }}
-      description={<>Accept payments via Paystack for your events</>}
+      description={<>{t("paystack_app_description")}</>}
       disableSwitch={shouldDisableSwitch}
       switchTooltip={shouldDisableSwitch ? t("other_payment_app_enabled") : undefined}>
       <>

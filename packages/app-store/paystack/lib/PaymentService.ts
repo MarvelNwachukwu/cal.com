@@ -5,6 +5,7 @@ import type { Booking, Payment, Prisma, PaymentOption } from "@calcom/prisma/cli
 import type { CalendarEvent } from "@calcom/types/Calendar";
 import type { IAbstractPaymentService } from "@calcom/types/PaymentService";
 
+import { appKeysSchema } from "../zod";
 import { PaystackClient } from "./PaystackClient";
 
 class PaystackPaymentService implements IAbstractPaymentService {
@@ -12,9 +13,12 @@ class PaystackPaymentService implements IAbstractPaymentService {
   private credentials: { public_key: string; secret_key: string };
 
   constructor(credentials: { key: Prisma.JsonValue }) {
-    const parsed = credentials.key as { public_key: string; secret_key: string };
-    this.credentials = parsed;
-    this.client = new PaystackClient(parsed.secret_key);
+    const parsed = appKeysSchema.safeParse(credentials.key);
+    if (!parsed.success) {
+      throw new Error("Invalid Paystack credentials: missing or malformed API keys");
+    }
+    this.credentials = parsed.data;
+    this.client = new PaystackClient(parsed.data.secret_key);
   }
 
   async create(
@@ -46,7 +50,7 @@ class PaystackPaymentService implements IAbstractPaymentService {
       amount: payment.amount,
       currency: payment.currency.toUpperCase(),
       reference,
-      callback_url: `${process.env.NEXT_PUBLIC_WEBAPP_URL}/api/integrations/paystack/callback`,
+      callback_url: `${process.env.NEXT_PUBLIC_WEBAPP_URL}/api/integrations/paystack/verify`,
       metadata: {
         bookingId,
         eventTitle: eventTitle || booking.title,
@@ -115,10 +119,24 @@ class PaystackPaymentService implements IAbstractPaymentService {
   async refund(paymentId: Payment["id"]): Promise<Payment | null> {
     const payment = await prisma.payment.findUnique({
       where: { id: paymentId },
+      select: {
+        id: true,
+        success: true,
+        refunded: true,
+        externalId: true,
+      },
     });
 
     if (!payment) {
       return null;
+    }
+
+    if (payment.refunded) {
+      return await prisma.payment.findUnique({ where: { id: paymentId } });
+    }
+
+    if (!payment.success) {
+      return await prisma.payment.findUnique({ where: { id: paymentId } });
     }
 
     await this.client.createRefund({
@@ -132,7 +150,7 @@ class PaystackPaymentService implements IAbstractPaymentService {
   }
 
   async getPaymentPaidStatus(): Promise<string> {
-    return "not_implemented";
+    return "paid";
   }
 
   async getPaymentDetails(): Promise<Payment> {

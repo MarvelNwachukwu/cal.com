@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 
+import { useLocale } from "@calcom/lib/hooks/useLocale";
 import type { Payment } from "@calcom/prisma/client";
 import { Button } from "@calcom/ui/components/button";
 
@@ -32,7 +33,7 @@ export default function PaystackPaymentComponent({
 }: PaystackPaymentComponentProps) {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
-  const popupRef = useRef<unknown>(null);
+  const { t } = useLocale();
 
   const paymentData = payment.data as unknown as PaystackPaymentData;
 
@@ -48,8 +49,6 @@ export default function PaystackPaymentComponent({
     try {
       const PaystackPop = (await import("@paystack/inline-js")).default;
       const popup = new PaystackPop();
-
-      popupRef.current = popup;
 
       popup.resumeTransaction(paymentData.access_code, {
         onSuccess: async () => {
@@ -74,20 +73,20 @@ export default function PaystackPaymentComponent({
         },
         onError: () => {
           setStatus("error");
-          setErrorMessage("Payment failed. Please try again.");
+          setErrorMessage(t("payment_failed_try_again"));
         },
       });
-    } catch (err) {
+    } catch {
       setStatus("error");
-      setErrorMessage("Failed to load payment. Please try again.");
+      setErrorMessage(t("payment_failed_try_again"));
     }
   };
 
   if (status === "success") {
     return (
       <div className="flex flex-col items-center justify-center space-y-4 p-6">
-        <div className="text-success text-2xl font-bold">Payment Successful</div>
-        <p className="text-default">Redirecting to your booking confirmation...</p>
+        <div className="text-success text-2xl font-bold">{t("payment_successful")}</div>
+        <p className="text-default">{t("redirecting_to_booking_confirmation")}</p>
       </div>
     );
   }
@@ -105,11 +104,11 @@ export default function PaystackPaymentComponent({
         loading={status === "loading"}
         disabled={status === "loading"}
         data-testid="paystack-pay-button">
-        Pay with Paystack
+        {t("pay_with_paystack")}
       </Button>
 
       {status === "idle" && (
-        <p className="text-subtle text-xs">You will be prompted to enter your payment details</p>
+        <p className="text-subtle text-xs">{t("paystack_payment_prompt")}</p>
       )}
     </div>
   );

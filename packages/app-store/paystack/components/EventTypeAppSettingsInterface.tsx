@@ -16,8 +16,6 @@ import { RadioField } from "@calcom/ui/components/radio";
 
 import { currencyOptions, currencySymbols, isAcceptedCurrencyCode } from "../lib/currencyOptions";
 
-type Option = { value: string; label: string };
-
 const EventTypeAppSettingsInterface: EventTypeAppSettingsComponent = ({
   getAppData,
   setAppData,

@@ -3,6 +3,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { handlePaymentSuccess } from "@calcom/app-store/_utils/payments/handlePaymentSuccess";
 import { HttpError as HttpCode } from "@calcom/lib/http-error";
 import logger from "@calcom/lib/logger";
+import { safeStringify } from "@calcom/lib/safeStringify";
 import { getServerErrorFromUnknown } from "@calcom/lib/server/getServerErrorFromUnknown";
 import { distributedTracing } from "@calcom/lib/tracing/factory";
 import prisma from "@calcom/prisma";
@@ -98,7 +99,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(200).json({ status: "success", message: "Payment confirmed" });
   } catch (_err) {
     const err = getServerErrorFromUnknown(_err);
-    log.error(`Verify Error: ${err.message}`);
+    log.error(`Verify Error: ${err.message}`, safeStringify(err));
     res.status(err.statusCode).json({ message: err.message });
   }
 }

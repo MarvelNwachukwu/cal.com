@@ -51,7 +51,7 @@ export default function PaystackSetup() {
 
             <form autoComplete="off" className="mt-5">
               <TextField
-                label="Public Key"
+                label={t("paystack_public_key")}
                 type="text"
                 name="public_key"
                 id="public_key"
@@ -63,7 +63,7 @@ export default function PaystackSetup() {
               />
 
               <TextField
-                label="Secret Key"
+                label={t("paystack_secret_key")}
                 type="password"
                 name="secret_key"
                 id="secret_key"
@@ -92,22 +92,22 @@ export default function PaystackSetup() {
             </form>
 
             <div className="mt-5">
-              <p className="text-default font-bold">Getting Started</p>
+              <p className="text-default font-bold">{t("getting_started")}</p>
               <p className="text-default mt-2">
-                To use Paystack with Cal.com, you need a Paystack account. Get your API keys from your{" "}
+                {t("paystack_getting_started_description")}{" "}
                 <a
                   className="text-blue-600 underline"
                   target="_blank"
                   href="https://dashboard.paystack.com/#/settings/developers"
                   rel="noreferrer">
-                  Paystack Dashboard
+                  {t("paystack_dashboard")}
                 </a>
                 .
               </p>
 
-              <p className="text-default mt-4 font-bold">Webhook Setup</p>
+              <p className="text-default mt-4 font-bold">{t("paystack_webhook_setup")}</p>
               <p className="text-default mt-2">
-                Add this webhook URL in your Paystack dashboard under Settings &gt; API Keys &amp; Webhooks:
+                {t("paystack_webhook_setup_description")}
               </p>
               <code className="bg-subtle mt-2 block rounded p-2 text-sm">
                 {typeof window !== "undefined" ? window.location.origin : "https://your-cal.com"}

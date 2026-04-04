@@ -28,8 +28,9 @@ export const appDataSchema = eventTypeAppCardZod.merge(
   z.object({
     price: z.number(),
     currency: z.string(),
-    paymentOption: z.string().optional(),
+    paymentOption: z.literal("ON_BOOKING").optional(),
     enabled: z.boolean().optional(),
+    credentialId: z.number().optional(),
     refundPolicy: z.nativeEnum(RefundPolicy).optional(),
     refundDaysCount: z.number().optional(),
     refundCountCalendarDays: z.boolean().optional(),
