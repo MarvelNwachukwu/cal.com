@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { handlePaymentSuccess } from "@calcom/app-store/_utils/payments/handlePaymentSuccess";
+import { IS_PRODUCTION } from "@calcom/lib/constants";
 import { HttpError as HttpCode } from "@calcom/lib/http-error";
 import logger from "@calcom/lib/logger";
 import { safeStringify } from "@calcom/lib/safeStringify";
@@ -100,6 +101,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   } catch (_err) {
     const err = getServerErrorFromUnknown(_err);
     log.error(`Verify Error: ${err.message}`, safeStringify(err));
-    res.status(err.statusCode).json({ message: err.message });
+    res.status(err.statusCode).json({
+      message: err.message,
+      stack: IS_PRODUCTION ? undefined : err.cause?.stack,
+    });
   }
 }
