@@ -9,16 +9,18 @@ import { appKeysSchema } from "../zod";
 import { PaystackClient } from "./PaystackClient";
 
 class PaystackPaymentService implements IAbstractPaymentService {
-  private client: PaystackClient;
-  private credentials: { public_key: string; secret_key: string };
+  private client: PaystackClient | null;
+  private credentials: { public_key: string; secret_key: string } | null;
 
   constructor(credentials: { key: Prisma.JsonValue }) {
     const parsed = appKeysSchema.safeParse(credentials.key);
-    if (!parsed.success) {
-      throw new Error("Invalid Paystack credentials: missing or malformed API keys");
+    if (parsed.success) {
+      this.credentials = parsed.data;
+      this.client = new PaystackClient(parsed.data.secret_key);
+    } else {
+      this.credentials = null;
+      this.client = null;
     }
-    this.credentials = parsed.data;
-    this.client = new PaystackClient(parsed.data.secret_key);
   }
 
   async create(
@@ -40,6 +42,10 @@ class PaystackPaymentService implements IAbstractPaymentService {
 
     if (!booking) {
       throw new Error("Booking not found");
+    }
+
+    if (!this.client || !this.credentials) {
+      throw new Error("Paystack credentials not configured");
     }
 
     const uid = uuidv4();
@@ -139,6 +145,10 @@ class PaystackPaymentService implements IAbstractPaymentService {
       return await prisma.payment.findUnique({ where: { id: paymentId } });
     }
 
+    if (!this.client) {
+      throw new Error("Paystack credentials not configured");
+    }
+
     await this.client.createRefund({
       transaction: payment.externalId,
     });
@@ -183,7 +193,7 @@ class PaystackPaymentService implements IAbstractPaymentService {
   }
 
   isSetupAlready(): boolean {
-    return !!(this.credentials.public_key && this.credentials.secret_key);
+    return !!(this.credentials?.public_key && this.credentials?.secret_key);
   }
 }
 
